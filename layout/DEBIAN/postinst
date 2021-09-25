@@ -1,0 +1,5 @@
+#!/bin/sh
+killall -9 gamed
+killall -9 nehelper
+killall -9 analyticsd
+exit 0
