@@ -1,5 +1,16 @@
 #include <substrate.h>
 
+@interface GKInternalRepresentation : NSObject
+@end
+
+@interface GKPlayerCredential : GKInternalRepresentation
+@end
+
+@interface GKAuthenticateResponse : GKInternalRepresentation
+@property(nonatomic, retain) GKPlayerCredential *credential;
+@property(nonatomic, retain) NSURL *passwordChangeURL;
+@end
+
 NSString *(*GKImageCacheRoot)(id);
 
 NSString *(*orig_GKImageCachePathForURL)(NSURL *);
@@ -23,20 +34,14 @@ NSString *mod_GKImageCachePathForSubdirectoryAndFilename(NSString *subdirectory,
 %end
 
 %hook GKAccountService
--(void)authenticatePlayerWithExistingCredentialsWithHandler:(id)handler {
-    if (![[[self clientProxy] entitlements] hasEntitlements:[%c(GKAccountServicePrivate) requiredEntitlements]]) return;
-    %orig;
-}
-%end
-
-%hook GKEntitlements
--(instancetype)initWithConnection:(NSXPCConnection *)connection {
-    id _self = %orig;
-    if (![_self _valuesForEntitlement:@"com.apple.private.game-center" forConnection:connection]) {
-        if (![_self _valuesForEntitlement:@"com.apple.developer.game-center" forConnection:connection]) MSHookIvar<uint64_t>(_self, "_entitlements") = 0;
-        else MSHookIvar<uint64_t>(_self, "_entitlements") &= 0xF7F7;
-    }
-    return _self;
+-(void)authenticatePlayerWithExistingCredentialsWithHandler:(void(^)(GKAuthenticateResponse *, NSError *))handler {
+    void (^_handler)(GKAuthenticateResponse *, NSError *) = ^(GKAuthenticateResponse *response, NSError *error) {
+        if (response && ![[[self clientProxy] entitlements] hasEntitlements:[%c(GKAccountServicePrivate) requiredEntitlements]]) { response.credential = nil;
+            response.passwordChangeURL = nil;
+        }
+        handler(response, error);
+    };
+    %orig(_handler);
 }
 %end
 

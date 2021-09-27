@@ -1,7 +1,7 @@
 Package: in.net.mario.tweak.fixentitlement
 Name: EntitlementFix
 Depends: mobilesubstrate
-Version: 0.0.2
+Version: 0.0.3
 Architecture: iphoneos-arm
 Description: Fix entitlement check for gamed & nehelper
 Maintainer: Mario Cheung
